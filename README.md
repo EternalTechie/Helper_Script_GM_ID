@@ -52,6 +52,7 @@ The name of the file has to follow the format
 Hence, the channel length is extracted from the filename.
 
 A single mat file is constructed from all the files, the mat file is organised in the following fashion:
+
     Database or Mat file
         └── Curves
                     │── Curve 1 (L=150nm)
