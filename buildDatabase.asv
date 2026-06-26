@@ -1,0 +1,110 @@
+clear
+clc
+
+files = dir('*.dat');
+
+nL = length(files);
+
+db = struct();
+
+W = 320e-9;
+
+for k = 1:nL
+
+    fname = files(k).name;
+
+    fprintf("Reading %s\n", fname);
+
+    data_length = readtable(fname);
+
+    % Columns:
+    % 1 -> VGS
+    % 2 -> GM
+    % 3 -> ID
+    % 4 -> CGG
+    % 5 -> GDS
+    % 6 -> VTH
+
+    vgs = data_length{:,1};
+    gm  = data_length{:,2};
+    id  = data_length{:,3};
+    cgg = data_length{:,4};
+    gds = data_length{:,5};
+    vth = data_length{:,6};
+
+    % Derived quantities
+
+    gm_id  = gm ./ id;
+    gm_gds = gm ./ gds;
+    ft     = gm ./ (2*pi*cgg);
+    vov    = vgs - vth;
+    id_w   = id ./ W;
+
+    % Keep only VOV > 50mV
+
+    mask = vov > 50e-3;
+
+    vgs    = vgs(mask);
+    vov    = vov(mask);
+
+    id     = id(mask);
+    id_w   = id_w(mask);
+
+    gm_id  = gm_id(mask);
+    gm_gds = gm_gds(mask);
+    ft     = ft(mask);
+
+    % Sort by GM/ID
+
+    [gm_id, idx] = sort(gm_id);
+
+    vgs    = vgs(idx);
+    vov    = vov(idx);
+
+    id     = id(idx);
+    id_w   = id_w(idx);
+
+    gm_gds = gm_gds(idx);
+    ft     = ft(idx);
+
+    % Extract length from filename
+    %
+    % Example:
+    % nmos_nch_15u.dat -> 15 um
+
+    token = regexp(fname,'nmos_nch_(\d+)u\.dat','tokens');
+
+    L_um = str2double(token{1}{1});
+    L    = L_um * 1e-6;
+
+    % Store curve
+
+    db.curves(k).L = L;
+    db.curves(k).W = W;
+
+    db.curves(k).VGS = vgs;
+    db.curves(k).VOV = vov;
+
+    db.curves(k).ID   = id;
+    db.curves(k).ID_W = id_w;
+
+    db.curves(k).GM_ID  = gm_id;
+    db.curves(k).GM_GDS = gm_gds;
+    db.curves(k).FT     = ft;
+
+end
+
+% Sort curves by increasing length
+
+L_all = [db.curves.L];
+
+[~, idx] = sort(L_all);
+
+db.curves = db.curves(idx);
+
+db.INFO = 'GM/ID characterization database';
+db.W    = W;
+
+save('nch_18_mac_nominal.mat','db');
+
+disp('Database written to nch_18_mac.mat')

@@ -1,0 +1,3 @@
+L = find_length(nch_18_mac_nominal,'FT',15,280);
+disp(lookup(nch_18_mac_nominal, 'GM_GDS', 15, L));
+disp(lookup(nch_18_mac_nominal,'VGS',15,L));
